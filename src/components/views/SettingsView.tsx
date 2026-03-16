@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
+import { EmailConnect } from '@/components/EmailConnect';
 
 interface Integration {
   id: string;
@@ -18,6 +20,7 @@ const INTEGRATIONS: Integration[] = [
 ];
 
 export function SettingsView() {
+  const { user } = useAuth();
   const [confidenceThreshold, setConfidenceThreshold] = useState(92);
   const [autoRespond, setAutoRespond] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -29,17 +32,25 @@ export function SettingsView() {
       {/* Company Profile */}
       <Section title="Company Profile" icon="🏢">
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Company Name" value="Acme Corp" />
-          <Field label="Industry" value="Professional Services" />
-          <Field label="Plan" value="Dominion Pro" badge="Active" badgeColor="#10B981" />
-          <Field label="AI Scans" value="47 today · 1,240 this month" />
+          <Field label="Company Name" value={user?.company ?? '—'} />
+          <Field label="Account Email" value={user?.email ?? '—'} />
+          <Field label="Plan" value="Dominion Beta" badge="Active" badgeColor="#10B981" />
+          <Field label="Name" value={user?.name ?? '—'} />
         </div>
       </Section>
 
-      {/* Integrations */}
-      <Section title="Integrations" icon="🔌">
+      {/* Email Connections */}
+      <Section title="Email Inbox Connections" icon="📧">
+        <p className="text-xs text-[#64748B] mb-4">
+          Connect your email inbox so Dominion can automatically read and process invoices, contracts, and insurance documents.
+        </p>
+        <EmailConnect compact={true} />
+      </Section>
+
+      {/* Other Integrations */}
+      <Section title="Other Integrations" icon="🔌">
         <div className="space-y-3">
-          {INTEGRATIONS.map(integration => (
+          {INTEGRATIONS.filter(i => i.id !== 'gmail' && i.id !== 'outlook').map(integration => (
             <IntegrationRow key={integration.id} integration={integration} />
           ))}
         </div>

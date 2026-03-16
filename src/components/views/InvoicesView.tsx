@@ -14,7 +14,7 @@ const FILTERS: { label: string; value: InvoiceStatus | 'all' }[] = [
   { label: 'Paid', value: 'paid' },
 ];
 
-export function InvoicesView({ onViewInvoice }: { onViewInvoice: (id: string) => void }) {
+export function InvoicesView({ onViewInvoice, onUpload }: { onViewInvoice: (id: string) => void; onUpload?: () => void }) {
   const { state } = useAppStore();
   const [filter, setFilter] = useState<InvoiceStatus | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -42,8 +42,11 @@ export function InvoicesView({ onViewInvoice }: { onViewInvoice: (id: string) =>
           <h2 className="text-base font-semibold text-[#0F172A]">All Invoices</h2>
           <p className="text-sm text-[#64748B]">{state.invoices.length} invoices · AI-extracted and verified</p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-          + Upload Invoice
+        <button
+          onClick={onUpload}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors"
+        >
+          ↑ Upload Invoice
         </button>
       </div>
 
@@ -100,7 +103,19 @@ export function InvoicesView({ onViewInvoice }: { onViewInvoice: (id: string) =>
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {filtered.length === 0 && state.invoices.length === 0 && (
+          <div className="py-16 text-center">
+            <div className="text-4xl mb-3">📄</div>
+            <div className="text-base font-semibold text-[#0F172A] mb-2">No invoices yet</div>
+            <div className="text-sm text-[#64748B] mb-5">Upload your first invoice and Dominion will extract all the details automatically.</div>
+            {onUpload && (
+              <button onClick={onUpload} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+                ↑ Upload Invoice
+              </button>
+            )}
+          </div>
+        )}
+        {filtered.length === 0 && state.invoices.length > 0 && (
           <div className="py-12 text-center text-sm text-[#64748B]">No invoices match your filters.</div>
         )}
       </div>

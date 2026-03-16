@@ -8,6 +8,7 @@ interface InboxViewProps {
   onViewInvoice: (id: string) => void;
   onViewPolicy: (id: string) => void;
   onViewContract: (id: string) => void;
+  onUpload?: () => void;
 }
 
 const PRIORITY_CONFIG = {
@@ -16,7 +17,7 @@ const PRIORITY_CONFIG = {
   info:   { color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE', label: 'INFO' },
 };
 
-export function InboxView({ onViewInvoice, onViewPolicy, onViewContract }: InboxViewProps) {
+export function InboxView({ onViewInvoice, onViewPolicy, onViewContract, onUpload }: InboxViewProps) {
   const { state, dismissAlert, triggerScan } = useAppStore();
   const s = state.summary;
 
@@ -78,10 +79,38 @@ export function InboxView({ onViewInvoice, onViewPolicy, onViewContract }: Inbox
 
       {/* Alert Sections */}
       {activeAlerts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <div className="text-lg font-semibold text-[#0F172A] mb-2">All Clear</div>
-          <div className="text-sm text-[#64748B]">No actions required. Dominion is monitoring your accounts.</div>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="text-5xl mb-4">🚀</div>
+          <div className="text-xl font-bold text-[#0F172A] mb-3">Welcome to Dominion</div>
+          <div className="text-sm text-[#64748B] max-w-md mb-8 leading-relaxed">
+            Your AI financial controller is ready. Upload your first document or connect your email inbox to get started.
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {onUpload && (
+              <button
+                onClick={onUpload}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors"
+              >
+                ↑ Upload a Document
+              </button>
+            )}
+            <div className="px-5 py-3 rounded-xl text-sm font-medium text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0]">
+              📧 Connect Email (in Settings)
+            </div>
+          </div>
+          <div className="mt-8 grid grid-cols-3 gap-4 max-w-lg">
+            {[
+              { icon: '📄', label: 'Upload invoices', desc: 'AI extracts vendor, amount, due date' },
+              { icon: '📋', label: 'Upload contracts', desc: 'AI tracks terms, renewals, compliance' },
+              { icon: '🛡️', label: 'Upload policies', desc: 'AI monitors coverage gaps & renewals' },
+            ].map(item => (
+              <div key={item.label} className="bg-white rounded-xl p-4 border border-[#E2E8F0] text-center">
+                <div className="text-2xl mb-2">{item.icon}</div>
+                <div className="text-xs font-semibold text-[#0F172A] mb-1">{item.label}</div>
+                <div className="text-[11px] text-[#94A3B8] leading-relaxed">{item.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-6">

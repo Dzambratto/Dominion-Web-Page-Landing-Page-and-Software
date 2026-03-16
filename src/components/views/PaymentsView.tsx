@@ -32,6 +32,15 @@ export function PaymentsView() {
         </div>
       </div>
 
+      {/* Empty state */}
+      {pending.length === 0 && approved.length === 0 && (
+        <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
+          <div className="text-4xl mb-3">💳</div>
+          <div className="text-base font-semibold text-[#0F172A] mb-2">No payments queued</div>
+          <div className="text-sm text-[#64748B] max-w-sm mx-auto">Once invoices are approved, Dominion will prepare payment instructions here for your review and approval.</div>
+        </div>
+      )}
+
       {/* Pending Approvals */}
       {pending.length > 0 && (
         <div className="mb-6">

@@ -14,7 +14,7 @@ const POLICY_TYPE_LABELS: Record<string, string> = {
   auto: 'Commercial Auto',
 };
 
-export function InsuranceView({ onViewPolicy }: { onViewPolicy: (id: string) => void }) {
+export function InsuranceView({ onViewPolicy, onUpload }: { onViewPolicy: (id: string) => void; onUpload?: () => void }) {
   const { state } = useAppStore();
 
   const totalPremium = state.policies.reduce((sum, p) => sum + p.premium, 0);
@@ -36,8 +36,11 @@ export function InsuranceView({ onViewPolicy }: { onViewPolicy: (id: string) => 
             {state.policies.length} policies · {formatCurrency(totalPremium)}/yr total premium
           </p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-          + Add Policy
+        <button
+          onClick={onUpload}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors"
+        >
+          ↑ Upload Policy
         </button>
       </div>
 
@@ -67,11 +70,24 @@ export function InsuranceView({ onViewPolicy }: { onViewPolicy: (id: string) => 
       )}
 
       {/* Policy Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {state.policies.map(policy => (
-          <PolicyCard key={policy.id} policy={policy} onClick={() => onViewPolicy(policy.id)} />
-        ))}
-      </div>
+      {state.policies.length === 0 ? (
+        <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
+          <div className="text-4xl mb-3">🛡️</div>
+          <div className="text-base font-semibold text-[#0F172A] mb-2">No insurance policies yet</div>
+          <div className="text-sm text-[#64748B] mb-5 max-w-sm mx-auto">Upload your insurance policies and Dominion will monitor coverage gaps, renewal dates, and premium trends.</div>
+          {onUpload && (
+            <button onClick={onUpload} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+              ↑ Upload Policy
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {state.policies.map(policy => (
+            <PolicyCard key={policy.id} policy={policy} onClick={() => onViewPolicy(policy.id)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

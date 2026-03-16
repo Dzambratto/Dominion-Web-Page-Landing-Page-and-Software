@@ -868,7 +868,7 @@ function Footer() {
 
 // ─── Main Landing Page ────────────────────────────────────────────────────────
 
-export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
+export function LandingPage({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn?: () => void }) {
   return (
     <div className="min-h-screen bg-[#080F1E]">
       <Nav onEnterApp={onEnterApp} />

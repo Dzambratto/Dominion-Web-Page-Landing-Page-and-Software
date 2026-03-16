@@ -13,7 +13,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; icon: string }
   vendor:      { label: 'Vendor',      color: '#EF4444', icon: '📦' },
 };
 
-export function ContractsView({ onViewContract }: { onViewContract: (id: string) => void }) {
+export function ContractsView({ onViewContract, onUpload }: { onViewContract: (id: string) => void; onUpload?: () => void }) {
   const { state } = useAppStore();
 
   const totalAnnualValue = state.contracts.reduce((sum, c) => {
@@ -33,8 +33,11 @@ export function ContractsView({ onViewContract }: { onViewContract: (id: string)
             {state.contracts.length} active contracts · {formatCurrency(totalAnnualValue)} total annual value
           </p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-          + Add Contract
+        <button
+          onClick={onUpload}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors"
+        >
+          ↑ Upload Contract
         </button>
       </div>
 
@@ -47,11 +50,24 @@ export function ContractsView({ onViewContract }: { onViewContract: (id: string)
       </div>
 
       {/* Contract Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {state.contracts.map(contract => (
-          <ContractCard key={contract.id} contract={contract} onClick={() => onViewContract(contract.id)} />
-        ))}
-      </div>
+      {state.contracts.length === 0 ? (
+        <div className="bg-white rounded-xl border border-[#E2E8F0] py-16 text-center">
+          <div className="text-4xl mb-3">📋</div>
+          <div className="text-base font-semibold text-[#0F172A] mb-2">No contracts yet</div>
+          <div className="text-sm text-[#64748B] mb-5 max-w-sm mx-auto">Upload a vendor contract and Dominion will extract terms, renewal dates, and rate limits automatically.</div>
+          {onUpload && (
+            <button onClick={onUpload} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+              ↑ Upload Contract
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {state.contracts.map(contract => (
+            <ContractCard key={contract.id} contract={contract} onClick={() => onViewContract(contract.id)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

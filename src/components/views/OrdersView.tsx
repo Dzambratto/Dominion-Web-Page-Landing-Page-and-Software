@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { MOCK_ORDERS } from '@/lib/mock-data';
+import { useAppStore } from '@/lib/store';
 import type { DeliveryOrder, OrderStatus } from '@/lib/types';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string }> = {
@@ -129,10 +129,11 @@ function OrderRow({ order, onClick }: { order: DeliveryOrder; onClick: () => voi
   );
 }
 
-export function OrdersView({ onViewOrder }: { onViewOrder: (id: string) => void }) {
+export function OrdersView({ onViewOrder, onUpload }: { onViewOrder: (id: string) => void; onUpload?: () => void }) {
+  const { state } = useAppStore();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [search, setSearch] = useState('');
-  const orders = MOCK_ORDERS;
+  const orders = state.orders;
 
   const filtered = useMemo(() => {
     return orders.filter(o => {
@@ -176,8 +177,11 @@ export function OrdersView({ onViewOrder }: { onViewOrder: (id: string) => void 
             )}
           </p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
-          + Upload Order
+        <button
+          onClick={onUpload}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors"
+        >
+          ↑ Upload Order
         </button>
       </div>
 
@@ -254,7 +258,19 @@ export function OrdersView({ onViewOrder }: { onViewOrder: (id: string) => void 
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {filtered.length === 0 && orders.length === 0 && (
+          <div className="py-16 text-center">
+            <div className="text-4xl mb-3">📦</div>
+            <div className="text-base font-semibold text-[#0F172A] mb-2">No delivery orders yet</div>
+            <div className="text-sm text-[#64748B] mb-5">Upload a BOL or delivery order and Dominion will extract route, cargo, and rate details.</div>
+            {onUpload && (
+              <button onClick={onUpload} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#3B82F6] hover:bg-blue-600 transition-colors">
+                ↑ Upload Order
+              </button>
+            )}
+          </div>
+        )}
+        {filtered.length === 0 && orders.length > 0 && (
           <div className="py-12 text-center text-sm text-[#64748B]">No orders match your filters.</div>
         )}
       </div>
