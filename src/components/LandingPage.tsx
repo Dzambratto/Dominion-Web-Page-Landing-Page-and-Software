@@ -84,7 +84,7 @@ function AnimatedCounter({ value, prefix = '', suffix = '', duration = 2000 }: {
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 
-function Nav({ onEnterApp }: { onEnterApp: () => void }) {
+function Nav({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -126,7 +126,7 @@ function Nav({ onEnterApp }: { onEnterApp: () => void }) {
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
           <button
-            onClick={onEnterApp}
+            onClick={onSignIn}
             className="text-slate-300 hover:text-white text-sm font-medium transition-colors px-4 py-2"
           >
             Sign In
@@ -135,7 +135,7 @@ function Nav({ onEnterApp }: { onEnterApp: () => void }) {
             onClick={onEnterApp}
             className="bg-blue-500 hover:bg-blue-400 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
           >
-            Get Early Access
+            Sign Up
           </button>
         </div>
 
@@ -161,10 +161,16 @@ function Nav({ onEnterApp }: { onEnterApp: () => void }) {
             </button>
           ))}
           <button
-            onClick={onEnterApp}
-            className="bg-blue-500 text-white text-sm font-semibold px-5 py-3 rounded-lg mt-2"
+            onClick={onSignIn}
+            className="text-slate-300 text-sm font-medium px-5 py-3 rounded-lg border border-white/10 mt-1"
           >
-            Get Early Access
+            Sign In
+          </button>
+          <button
+            onClick={onEnterApp}
+            className="bg-blue-500 text-white text-sm font-semibold px-5 py-3 rounded-lg mt-1"
+          >
+            Sign Up
           </button>
         </div>
       )}
@@ -174,7 +180,7 @@ function Nav({ onEnterApp }: { onEnterApp: () => void }) {
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
-function Hero({ onEnterApp }: { onEnterApp: () => void }) {
+function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () => void }) {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#080F1E]">
       {/* Background grid */}
@@ -272,11 +278,19 @@ function Hero({ onEnterApp }: { onEnterApp: () => void }) {
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
           <button
-            onClick={() => document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={onSignIn}
             className="flex items-center gap-2 text-slate-300 hover:text-white font-medium text-base px-8 py-4 rounded-xl border border-white/10 hover:border-white/20 transition-all"
           >
+            Sign In
+          </button>
+        </div>
+        <div className="flex justify-center mb-10">
+          <button
+            onClick={() => document.getElementById('platform')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-sm font-medium transition-colors"
+          >
             See How It Works
-            <ChevronDown size={18} />
+            <ChevronDown size={16} />
           </button>
         </div>
 
@@ -419,9 +433,11 @@ When contracts approach renewal, Dominion flags them with enough notice to reneg
       icon: <Brain size={18} />,
       label: 'AI Intelligence',
       title: 'Operational intelligence that never sleeps',
-      description: `Dominion\'s AI Operational Intelligence engine continuously monitors every pattern across your vendors, invoices, contracts, and payments — surfacing anomalies, trends, and risks before they become costly problems.
+       description: `Dominion's AI Operational Intelligence engine continuously monitors every pattern across your vendors, invoices, contracts, and payments — surfacing anomalies, trends, and risks before they become costly problems.
 
-From cost spikes and duplicate invoices to vendor quality degradation and coverage gaps, the pattern detection engine runs 24/7 and delivers actionable alerts ranked by financial impact.`,
+From cost spikes and duplicate invoices to vendor quality degradation and coverage gaps, the pattern detection engine runs 24/7 and delivers actionable alerts ranked by financial impact.
+
+Every vendor you work with gets an automatically built profile. From the first invoice Dominion processes, it begins tracking total spend, job history, invoice accuracy, and response times — aggregating everything by month, quarter, and year. The more you use a vendor, the richer the profile becomes: a living record of every dollar spent, every job completed, and every time they fell short of their contract.`,
       items: [
         'Cost spike detection across all vendor categories',
         'Duplicate invoice and double-billing alerts',
@@ -549,7 +565,7 @@ function FeaturesSection() {
     {
       icon: <BarChart3 size={22} />,
       title: 'Vendor Intelligence Layer',
-      description: 'Every vendor builds a profile over time — average invoice amounts, payment history, risk score, and contract compliance rate. Spot problematic vendors before they cost you money.',
+      description: 'The moment Dominion encounters a new vendor, it opens a profile. Every subsequent invoice, contract, or order enriches it — building a complete picture of total spend, jobs completed, payment history, and compliance rate, all broken down by month, quarter, and year. One click gives you an instant audit of every dollar that has ever moved between you and that vendor.',
       color: 'amber',
     },
     {
@@ -868,10 +884,11 @@ function Footer() {
 // ─── Main Landing Page ────────────────────────────────────────────────────────
 
 export function LandingPage({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn?: () => void }) {
+  const handleSignIn = onSignIn ?? onEnterApp;
   return (
     <div className="min-h-screen bg-[#080F1E]">
-      <Nav onEnterApp={onEnterApp} />
-      <Hero onEnterApp={onEnterApp} />
+      <Nav onEnterApp={onEnterApp} onSignIn={handleSignIn} />
+      <Hero onEnterApp={onEnterApp} onSignIn={handleSignIn} />
       <StatsBar />
       <PlatformSection />
       <FeaturesSection />

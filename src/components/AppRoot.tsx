@@ -34,6 +34,7 @@ function OAuthNotice({ notice }: { notice: { type: 'success' | 'error'; message:
 function AppInner() {
   const { user, isLoading, addEmailConnection } = useAuth();
   const [mode, setMode] = useState<'landing' | 'auth'>('landing');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [oauthNotice, setOauthNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Handle OAuth callbacks — Google/Microsoft redirect back with query params
@@ -104,6 +105,7 @@ function AppInner() {
   if (mode === 'auth') {
     return (
       <AuthScreen
+        initialMode={authMode}
         onSuccess={() => { /* auth state update triggers re-render automatically */ }}
         onBack={() => setMode('landing')}
       />
@@ -115,8 +117,8 @@ function AppInner() {
     <>
       {oauthNotice && <OAuthNotice notice={oauthNotice} />}
       <LandingPage
-        onEnterApp={() => setMode('auth')}
-        onSignIn={() => setMode('auth')}
+        onEnterApp={() => { setAuthMode('signup'); setMode('auth'); }}
+        onSignIn={() => { setAuthMode('signin'); setMode('auth'); }}
       />
     </>
   );

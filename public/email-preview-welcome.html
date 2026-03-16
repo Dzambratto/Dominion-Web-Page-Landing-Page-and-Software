@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Dominion</title>
+  <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #060D1A;
+      color: #E2E8F0;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    /* Layout */
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #060D1A;
+    }
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #080F1E 0%, #0F1B33 100%);
+      padding: 40px 40px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .logo-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+    }
+    .logo-text {
+      font-size: 24px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.5px;
+    }
+    /* Hero band */
+    .hero-band {
+      background: linear-gradient(135deg, #0F1B33 0%, #0A1628 50%, #0F1B33 100%);
+      padding: 48px 40px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(59,130,246,0.15);
+    }
+    .hero-band::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%; transform: translateX(-50%);
+      width: 400px; height: 300px;
+      background: radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #93C5FD;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #3B82F6;
+      display: inline-block;
+    }
+    .hero-headline {
+      font-size: 32px;
+      font-weight: 900;
+      color: #FFFFFF;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 14px;
+    }
+    .hero-headline span {
+      background: linear-gradient(90deg, #60A5FA, #818CF8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 15px;
+      color: #94A3B8;
+      line-height: 1.65;
+      max-width: 440px;
+      margin: 0 auto 28px;
+    }
+    /* CTA Button */
+    .cta-btn {
+      display: inline-block;
+      background: #3B82F6;
+      color: #FFFFFF !important;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 32px rgba(59,130,246,0.35);
+    }
+    /* Body */
+    .body-section {
+      background: #080F1E;
+      padding: 40px 40px 32px;
+    }
+    .greeting {
+      font-size: 16px;
+      color: #CBD5E1;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .greeting strong {
+      color: #FFFFFF;
+    }
+    /* Feature cards */
+    .features-grid {
+      display: table;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 32px;
+    }
+    .feature-card {
+      display: table-cell;
+      width: 33.33%;
+      vertical-align: top;
+      padding: 18px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 0;
+      text-align: center;
+    }
+    .feature-card:first-child { border-radius: 12px 0 0 12px; }
+    .feature-card:last-child { border-radius: 0 12px 12px 0; border-left: none; }
+    .feature-card:not(:first-child):not(:last-child) { border-left: none; }
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .feature-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #E2E8F0;
+      margin-bottom: 4px;
+      letter-spacing: 0.01em;
+    }
+    .feature-desc {
+      font-size: 11px;
+      color: #64748B;
+      line-height: 1.5;
+    }
+    /* Steps */
+    .steps-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: #60A5FA;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 28px;
+    }
+    .step-content { flex: 1; padding-top: 4px; }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #E2E8F0;
+      margin-bottom: 2px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.5;
+    }
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 28px 0;
+    }
+    /* Stats bar */
+    .stats-bar {
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.12);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .stats-bar-inner {
+      display: table;
+      width: 100%;
+    }
+    .stat-cell {
+      display: table-cell;
+      width: 33.33%;
+      text-align: center;
+      vertical-align: middle;
+      padding: 0 8px;
+    }
+    .stat-cell + .stat-cell {
+      border-left: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: #60A5FA;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    /* Footer */
+    .footer {
+      background: #060D1A;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 28px 40px;
+      text-align: center;
+    }
+    .footer-logo-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .footer-logo-text {
+      font-size: 15px;
+      font-weight: 800;
+      color: #475569;
+      letter-spacing: -0.3px;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .footer-links {
+      font-size: 12px;
+      color: #475569;
+    }
+    .footer-links a {
+      color: #475569;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-row">
+        <!-- Inline SVG logo (D with circuit lines) -->
+        <svg class="logo-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="44" height="44" rx="10" fill="rgba(59,130,246,0.12)"/>
+          <text x="8" y="32" font-family="-apple-system, sans-serif" font-size="26" font-weight="900" fill="#3B82F6">D</text>
+          <!-- Circuit lines -->
+          <line x1="28" y1="14" x2="36" y2="14" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="36" y1="14" x2="36" y2="20" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="36" cy="20" r="1.5" fill="#60A5FA" opacity="0.8"/>
+          <line x1="28" y1="30" x2="38" y2="30" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          <circle cx="38" cy="30" r="1.5" fill="#60A5FA" opacity="0.6"/>
+        </svg>
+        <span class="logo-text">Dominion</span>
+      </div>
+    </div>
+
+    <!-- Hero Band -->
+    <div class="hero-band">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Beta Access Confirmed
+      </div>
+      <div class="hero-headline">
+        Welcome to<br/><span>AI-Powered Finance</span>
+      </div>
+      <p class="hero-sub">
+        Your account is ready. Connect your first inbox and Dominion will scan your financial documents — catching overcharges, expiring contracts, and insurance gaps automatically.
+      </p>
+      <a href="https://getdominiontech.com" class="cta-btn">
+        Launch Dominion →
+      </a>
+    </div>
+
+    <!-- Body -->
+    <div class="body-section">
+
+      <!-- Greeting -->
+      <p class="greeting">
+        Hi <strong>{{firstName}}</strong>,<br/><br/>
+        You're in. Dominion is now watching your inbox so you don't have to. Here's what happens the moment you connect your first email account:
+      </p>
+
+      <!-- Feature cards -->
+      <table class="features-grid" cellpadding="0" cellspacing="0">
+        <tr>
+          <td class="feature-card">
+            <span class="feature-icon">🧾</span>
+            <div class="feature-title">Invoice Detection</div>
+            <div class="feature-desc">Every invoice extracted and matched against your contracts</div>
+          </td>
+          <td class="feature-card">
+            <span class="feature-icon">📋</span>
+            <div class="feature-title">Contract Matching</div>
+            <div class="feature-desc">Rate overcharges flagged before you approve payment</div>
+          </td>
+          <td class="feature-card">
+            <span class="feature-icon">🛡️</span>
+            <div class="feature-title">Insurance Alerts</div>
+            <div class="feature-desc">Expiry warnings 60, 30, and 7 days in advance</div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <table class="stats-bar-inner" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="stat-cell">
+              <div class="stat-value">2 yrs</div>
+              <div class="stat-label">of inbox history<br/>scanned on connect</div>
+            </td>
+            <td class="stat-cell">
+              <div class="stat-value">~5 min</div>
+              <div class="stat-label">to connect your<br/>first email account</div>
+            </td>
+            <td class="stat-cell">
+              <div class="stat-value">$0</div>
+              <div class="stat-label">during beta —<br/>no card required</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Getting started steps -->
+      <div class="steps-heading">Get started in 3 steps</div>
+
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Connect your inbox</div>
+          <div class="step-desc">Link Gmail or Outlook with one click. We use read-only OAuth — we never send emails on your behalf.</div>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Review your first scan</div>
+          <div class="step-desc">Dominion surfaces every invoice, contract, and insurance document it finds — organised and ready to review.</div>
+        </div>
+      </div>
+
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Approve or flag with one tap</div>
+          <div class="step-desc">Approve clean invoices instantly. Flag anomalies for review. Dominion learns your preferences over time.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="greeting" style="font-size:14px; margin-bottom:0;">
+        Questions? Reply to this email or reach us at <a href="mailto:support@getdominiontech.com" style="color:#60A5FA;">support@getdominiontech.com</a>.<br/><br/>
+        — The Dominion Team
+      </p>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-logo-row">
+        <span class="footer-logo-text">DOMINION</span>
+      </div>
+      <p class="footer-text">
+        AI-powered financial operations for growing businesses.<br/>
+        getdominiontech.com
+      </p>
+      <p class="footer-links">
+        <a href="https://getdominiontech.com">Visit site</a> &nbsp;·&nbsp;
+        <a href="https://getdominiontech.com/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+        <a href="{{unsubscribeUrl}}">Unsubscribe</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
