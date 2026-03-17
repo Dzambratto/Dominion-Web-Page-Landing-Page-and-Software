@@ -241,7 +241,7 @@ create table if not exists public.delivery_orders (
   currency text default 'USD',
   carrier_quote_ref text,
   billing_portal text,
-  references jsonb default '[]',
+  "references" jsonb default '[]',
   carrier_contact jsonb,
   anomalies jsonb default '[]',
   missing_fields jsonb default '[]',
