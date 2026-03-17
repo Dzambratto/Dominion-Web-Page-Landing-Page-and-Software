@@ -1,5 +1,12 @@
 {
   "rewrites": [
+    { "source": "/api/auth/google", "destination": "/api/auth/google/index.js" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth/google/callback.js" },
+    { "source": "/api/auth/microsoft", "destination": "/api/auth/microsoft/index.js" },
+    { "source": "/api/auth/microsoft/callback", "destination": "/api/auth/microsoft/callback.js" },
+    { "source": "/api/gmail/scan", "destination": "/api/gmail/scan.js" },
+    { "source": "/api/gmail/attachment", "destination": "/api/gmail/attachment.js" },
+    { "source": "/api/extract", "destination": "/api/extract.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

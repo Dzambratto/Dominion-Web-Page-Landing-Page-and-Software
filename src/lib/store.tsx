@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import type { Invoice, Contract, InsurancePolicy, Payment, Renewal, InboxAlert, AppSummary, DeliveryOrder } from './types';
+import { runGmailScan } from './gmail-scan';
 
 interface AppState {
   invoices: Invoice[];
@@ -12,6 +13,7 @@ interface AppState {
   summary: AppSummary;
   isScanning: boolean;
   activeView: string;
+  lastScanMessage: string | null;
 }
 
 type Action =
@@ -23,7 +25,8 @@ type Action =
   | { type: 'SET_VIEW'; view: string }
   | { type: 'ADD_INVOICE'; invoice: Invoice }
   | { type: 'ADD_CONTRACT'; contract: Contract }
-  | { type: 'ADD_POLICY'; policy: InsurancePolicy };
+  | { type: 'ADD_POLICY'; policy: InsurancePolicy }
+  | { type: 'LOAD_SCAN_RESULTS'; invoices: Invoice[]; alerts: InboxAlert[]; message: string };
 
 const EMPTY_SUMMARY: AppSummary = {
   pendingApprovals: 0,
@@ -46,6 +49,7 @@ const initialState: AppState = {
   summary: EMPTY_SUMMARY,
   isScanning: false,
   activeView: 'inbox',
+  lastScanMessage: null,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -80,6 +84,28 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, contracts: [action.contract, ...state.contracts] };
     case 'ADD_POLICY':
       return { ...state, policies: [action.policy, ...state.policies] };
+    case 'LOAD_SCAN_RESULTS': {
+      // Deduplicate: skip invoices already in state by invoice number + vendor
+      const newInvoices = action.invoices.filter(
+        inv => !state.invoices.find(e => e.invoiceNumber === inv.invoiceNumber && e.vendorName === inv.vendorName)
+      );
+      const newAlerts = action.alerts.filter(a => !state.alerts.find(e => e.id === a.id));
+      const pendingCount = newInvoices.filter(i => i.status === 'pending').length;
+      const anomalyCount = newInvoices.filter(i => i.status === 'flagged').length;
+      return {
+        ...state,
+        invoices: [...newInvoices, ...state.invoices],
+        alerts: [...newAlerts, ...state.alerts],
+        summary: {
+          ...state.summary,
+          pendingApprovals: state.summary.pendingApprovals + pendingCount,
+          anomaliesDetected: state.summary.anomaliesDetected + anomalyCount,
+          aiScansToday: state.summary.aiScansToday + 1,
+        },
+        isScanning: false,
+        lastScanMessage: action.message,
+      };
+    }
     default:
       return state;
   }
@@ -91,11 +117,12 @@ interface AppContextValue {
   approveInvoice: (id: string) => void;
   flagInvoice: (id: string) => void;
   approvePayment: (id: string) => void;
-  triggerScan: () => void;
+  triggerScan: (userId?: string) => void;
   setView: (view: string) => void;
   addInvoice: (invoice: Invoice) => void;
   addContract: (contract: Contract) => void;
   addPolicy: (policy: InsurancePolicy) => void;
+  loadScanResults: (invoices: Invoice[], alerts: InboxAlert[], message: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -112,15 +139,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addContract = useCallback((contract: Contract) => dispatch({ type: 'ADD_CONTRACT', contract }), []);
   const addPolicy = useCallback((policy: InsurancePolicy) => dispatch({ type: 'ADD_POLICY', policy }), []);
 
-  const triggerScan = useCallback(() => {
+  const loadScanResults = useCallback((invoices: Invoice[], alerts: InboxAlert[], message: string) => {
+    dispatch({ type: 'LOAD_SCAN_RESULTS', invoices, alerts, message });
+  }, []);
+
+  const triggerScan = useCallback((userId?: string) => {
     dispatch({ type: 'SET_SCANNING', value: true });
-    setTimeout(() => dispatch({ type: 'SET_SCANNING', value: false }), 2500);
+    if (userId) {
+      runGmailScan(userId)
+        .then(result => {
+          const msg = result.extractedCount > 0
+            ? `Scan complete — ${result.extractedCount} document${result.extractedCount > 1 ? 's' : ''} extracted from ${result.scannedCount} emails`
+            : result.scannedCount > 0
+              ? `Scanned ${result.scannedCount} emails — no new financial documents found`
+              : 'No new emails found since last scan';
+          dispatch({ type: 'LOAD_SCAN_RESULTS', invoices: result.invoices, alerts: result.alerts, message: msg });
+        })
+        .catch((err) => {
+          console.error('Gmail scan failed:', err);
+          dispatch({ type: 'SET_SCANNING', value: false });
+        });
+    } else {
+      // No Gmail connected — stop scanning after a moment
+      setTimeout(() => dispatch({ type: 'SET_SCANNING', value: false }), 1500);
+    }
   }, []);
 
   return (
     <AppContext.Provider value={{
       state, dismissAlert, approveInvoice, flagInvoice, approvePayment,
-      triggerScan, setView, addInvoice, addContract, addPolicy,
+      triggerScan, setView, addInvoice, addContract, addPolicy, loadScanResults,
     }}>
       {children}
     </AppContext.Provider>
