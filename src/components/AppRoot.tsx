@@ -94,7 +94,7 @@ function AppInner() {
   // If user is logged in, show the dashboard
   if (user) {
     return (
-      <AppProvider>
+      <AppProvider userId={user.id}>
         {oauthNotice && <OAuthNotice notice={oauthNotice} />}
         <DashboardShell />
       </AppProvider>

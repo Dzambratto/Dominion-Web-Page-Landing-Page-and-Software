@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 export interface User {
   id: string;
@@ -31,19 +32,15 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Local-only fallback keys
 const USERS_KEY = 'dominion_users';
 const SESSION_KEY = 'dominion_session';
 
 function getStoredUsers(): Record<string, { passwordHash: string; user: User }> {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; }
 }
 
 function hashPassword(password: string): string {
-  // Simple deterministic hash for demo purposes (not cryptographically secure)
   let hash = 0;
   const str = password + 'dominion_salt_2026';
   for (let i = 0; i < str.length; i++) {
@@ -54,68 +51,120 @@ function hashPassword(password: string): string {
   return Math.abs(hash).toString(36);
 }
 
+async function fetchProfile(userId: string): Promise<{ name: string; company: string } | null> {
+  const { data } = await supabase.from('profiles').select('name, company').eq('id', userId).single();
+  return data;
+}
+
+async function fetchEmailConnections(userId: string): Promise<EmailConnection[]> {
+  const { data } = await supabase.from('email_connections').select('provider, email, connected_at, status').eq('user_id', userId);
+  if (!data) return [];
+  return data.map((row) => ({
+    provider: row.provider as 'gmail' | 'outlook',
+    email: row.email,
+    connectedAt: row.connected_at,
+    status: row.status as 'active' | 'error',
+  }));
+}
+
+async function buildUser(supabaseUser: { id: string; email?: string; created_at: string }): Promise<User> {
+  const profile = await fetchProfile(supabaseUser.id);
+  const connections = await fetchEmailConnections(supabaseUser.id);
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: profile?.name || '',
+    company: profile?.company || '',
+    createdAt: supabaseUser.created_at,
+    emailConnections: connections,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, isLoading: true });
 
-  // Restore session on mount
   useEffect(() => {
-    try {
-      const sessionUserId = localStorage.getItem(SESSION_KEY);
-      if (sessionUserId) {
-        const users = getStoredUsers();
-        const record = users[sessionUserId];
-        if (record) {
-          setState({ user: record.user, isLoading: false });
-          return;
+    if (!isSupabaseConfigured) {
+      try {
+        const sessionUserId = localStorage.getItem(SESSION_KEY);
+        if (sessionUserId) {
+          const users = getStoredUsers();
+          const record = users[sessionUserId];
+          if (record) { setState({ user: record.user, isLoading: false }); return; }
         }
-      }
-    } catch {
-      // ignore
+      } catch { /* ignore */ }
+      setState({ user: null, isLoading: false });
+      return;
     }
-    setState({ user: null, isLoading: false });
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const user = await buildUser(session.user);
+        setState({ user, isLoading: false });
+      } else {
+        setState({ user: null, isLoading: false });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const user = await buildUser(session.user);
+        setState({ user, isLoading: false });
+      } else if (event === 'SIGNED_OUT') {
+        setState({ user: null, isLoading: false });
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, name: string, company: string): Promise<{ error?: string }> => {
-    const users = getStoredUsers();
-    const existingId = Object.keys(users).find(id => users[id].user.email.toLowerCase() === email.toLowerCase());
-    if (existingId) {
-      return { error: 'An account with this email already exists.' };
+    if (!isSupabaseConfigured) {
+      const users = getStoredUsers();
+      const existingId = Object.keys(users).find(id => users[id].user.email.toLowerCase() === email.toLowerCase());
+      if (existingId) return { error: 'An account with this email already exists.' };
+      if (password.length < 8) return { error: 'Password must be at least 8 characters.' };
+      const user: User = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        email: email.toLowerCase().trim(), name: name.trim(), company: company.trim(),
+        createdAt: new Date().toISOString(), emailConnections: [],
+      };
+      users[user.id] = { passwordHash: hashPassword(password), user };
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      localStorage.setItem(SESSION_KEY, user.id);
+      setState({ user, isLoading: false });
+      return {};
     }
-    if (password.length < 8) {
-      return { error: 'Password must be at least 8 characters.' };
-    }
-    const user: User = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-      email: email.toLowerCase().trim(),
-      name: name.trim(),
-      company: company.trim(),
-      createdAt: new Date().toISOString(),
-      emailConnections: [],
-    };
-    users[user.id] = { passwordHash: hashPassword(password), user };
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    localStorage.setItem(SESSION_KEY, user.id);
-    setState({ user, isLoading: false });
+    const { error } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(), password,
+      options: { data: { name: name.trim(), company: company.trim() } },
+    });
+    if (error) return { error: error.message };
     return {};
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
-    const users = getStoredUsers();
-    const userId = Object.keys(users).find(id => users[id].user.email.toLowerCase() === email.toLowerCase().trim());
-    if (!userId) {
-      return { error: 'No account found with this email.' };
+    if (!isSupabaseConfigured) {
+      const users = getStoredUsers();
+      const userId = Object.keys(users).find(id => users[id].user.email.toLowerCase() === email.toLowerCase().trim());
+      if (!userId) return { error: 'No account found with this email.' };
+      if (users[userId].passwordHash !== hashPassword(password)) return { error: 'Incorrect password.' };
+      localStorage.setItem(SESSION_KEY, userId);
+      setState({ user: users[userId].user, isLoading: false });
+      return {};
     }
-    if (users[userId].passwordHash !== hashPassword(password)) {
-      return { error: 'Incorrect password.' };
-    }
-    localStorage.setItem(SESSION_KEY, userId);
-    setState({ user: users[userId].user, isLoading: false });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.toLowerCase().trim(), password });
+    if (error) return { error: error.message };
     return {};
   }, []);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY);
-    setState({ user: null, isLoading: false });
+    if (!isSupabaseConfigured) {
+      localStorage.removeItem(SESSION_KEY);
+      setState({ user: null, isLoading: false });
+      return;
+    }
+    supabase.auth.signOut();
   }, []);
 
   const addEmailConnection = useCallback((connection: EmailConnection) => {
@@ -128,11 +177,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           connection,
         ],
       };
-      // Persist
-      const users = getStoredUsers();
-      if (users[updated.id]) {
-        users[updated.id].user = updated;
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      if (isSupabaseConfigured) {
+        supabase.from('email_connections').upsert({
+          user_id: prev.user.id, provider: connection.provider,
+          email: connection.email, connected_at: connection.connectedAt, status: connection.status,
+        }, { onConflict: 'user_id,provider' }).then(({ error }) => {
+          if (error) console.error('Failed to save email connection:', error);
+        });
+      } else {
+        const users = getStoredUsers();
+        if (users[prev.user.id]) { users[prev.user.id].user = updated; localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
       }
       return { ...prev, user: updated };
     });
@@ -145,10 +199,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...prev.user,
         emailConnections: prev.user.emailConnections.filter(c => c.provider !== provider),
       };
-      const users = getStoredUsers();
-      if (users[updated.id]) {
-        users[updated.id].user = updated;
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      if (isSupabaseConfigured) {
+        supabase.from('email_connections').delete().eq('user_id', prev.user.id).eq('provider', provider)
+          .then(({ error }) => { if (error) console.error('Failed to remove email connection:', error); });
+      } else {
+        const users = getStoredUsers();
+        if (users[prev.user.id]) { users[prev.user.id].user = updated; localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
       }
       return { ...prev, user: updated };
     });
