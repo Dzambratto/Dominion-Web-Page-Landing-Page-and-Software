@@ -171,12 +171,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState({ user, isLoading: false });
       return {};
     }
-    const { error } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(), password,
-      options: { data: { name: name.trim(), company: company.trim() } },
-    });
-    if (error) return { error: error.message };
-    return {};
+    // Use server-side signup to auto-confirm users (bypasses email confirmation rate limits)
+    try {
+      const resp = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password, name: name.trim(), company: company.trim() }),
+      });
+      const data = await resp.json();
+      if (data.fallback) {
+        // Server key not configured — fall back to standard Supabase signup
+        const { error } = await supabase.auth.signUp({
+          email: email.toLowerCase().trim(), password,
+          options: { data: { name: name.trim(), company: company.trim() } },
+        });
+        if (error) return { error: error.message };
+        return {};
+      }
+      if (!resp.ok) return { error: data.error || 'Sign up failed.' };
+      // If server returned a session, set it directly
+      if (data.session?.access_token) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      } else {
+        // Created but no session returned — sign in now
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: email.toLowerCase().trim(), password,
+        });
+        if (signInErr) return { error: signInErr.message };
+      }
+      return {};
+    } catch {
+      // Network error — fall back to standard signup
+      const { error } = await supabase.auth.signUp({
+        email: email.toLowerCase().trim(), password,
+        options: { data: { name: name.trim(), company: company.trim() } },
+      });
+      if (error) return { error: error.message };
+      return {};
+    }
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
