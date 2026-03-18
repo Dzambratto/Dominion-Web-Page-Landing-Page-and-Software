@@ -4,6 +4,7 @@ import { LandingPage } from '@/components/LandingPage';
 import { DashboardShell } from '@/components/DashboardShell';
 import { AuthScreen } from '@/components/AuthScreen';
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   google_denied: 'Google sign-in was cancelled.',
@@ -33,13 +34,36 @@ function OAuthNotice({ notice }: { notice: { type: 'success' | 'error'; message:
 /** Inner component that reads auth state after AuthProvider is mounted */
 function AppInner() {
   const { user, isLoading, addEmailConnection } = useAuth();
-  const [mode, setMode] = useState<'landing' | 'auth'>('landing');
+  const [mode, setMode] = useState<'landing' | 'auth' | 'reset'>('landing');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [oauthNotice, setOauthNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [dashboardInitialView, setDashboardInitialView] = useState<'inbox' | 'settings'>('inbox');
 
   // Track pending OAuth connection — we may need to apply it once user is loaded
   const pendingOAuthRef = useRef<{ provider: 'gmail' | 'outlook'; email: string; label: string } | null>(null);
   const oauthProcessedRef = useRef(false);
+
+  // Detect Supabase password recovery token in URL hash (#type=recovery&access_token=...)
+  // This must run before auth state is resolved so we intercept before the dashboard renders.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setMode('reset');
+      // Don't clean up the hash yet — Supabase needs it to establish the recovery session
+    }
+  }, []);
+
+  // Listen for Supabase PASSWORD_RECOVERY event — fires when the recovery token is consumed
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('reset');
+        // Clean up the hash now that Supabase has consumed the token
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Parse OAuth params on mount — store them for processing once auth state is ready
   useEffect(() => {
@@ -75,13 +99,14 @@ function AppInner() {
     pendingOAuthRef.current = null;
 
     if (user) {
-      // User is logged in — save the connection
+      // User is logged in — save the connection and navigate to Settings
       addEmailConnection({
         provider,
         email,
         connectedAt: new Date().toISOString(),
         status: 'active',
       });
+      setDashboardInitialView('settings');
       setOauthNotice({
         type: 'success',
         message: `✓ ${label} connected — ${email}\nWe're scanning your inbox for financial documents now.`,
@@ -116,12 +141,28 @@ function AppInner() {
     );
   }
 
+  // Password reset mode — always show reset form regardless of login state
+  if (mode === 'reset') {
+    return (
+      <>
+        {oauthNotice && <OAuthNotice notice={oauthNotice} />}
+        <AuthScreen
+          initialMode="reset"
+          onSuccess={() => {
+            setMode('landing');
+          }}
+          onBack={() => setMode('landing')}
+        />
+      </>
+    );
+  }
+
   // If user is logged in, show the dashboard
   if (user) {
     return (
       <AppProvider userId={user.id}>
         {oauthNotice && <OAuthNotice notice={oauthNotice} />}
-        <DashboardShell />
+        <DashboardShell initialView={dashboardInitialView} />
       </AppProvider>
     );
   }

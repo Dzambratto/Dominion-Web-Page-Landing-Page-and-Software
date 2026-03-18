@@ -7,7 +7,7 @@ type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 interface AuthScreenProps {
   onSuccess: () => void;
   onBack?: () => void;
-  initialMode?: 'signin' | 'signup';
+  initialMode?: 'signin' | 'signup' | 'reset';
 }
 
 export function AuthScreen({ onSuccess, onBack, initialMode = 'signup' }: AuthScreenProps) {
@@ -22,15 +22,8 @@ export function AuthScreen({ onSuccess, onBack, initialMode = 'signup' }: AuthSc
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Detect password reset callback: Supabase appends #type=recovery to the URL
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setMode('reset');
-      // Clean up the hash so it doesn't persist on refresh
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+  // If initialMode is 'reset', we're already in reset mode — no hash detection needed
+  // (AppRoot handles the PASSWORD_RECOVERY event and passes initialMode='reset')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

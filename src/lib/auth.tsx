@@ -134,7 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Don't sign the user into the dashboard — AppRoot will show the reset form
+        setState({ user: null, isLoading: false });
+      } else if (event === 'SIGNED_IN' && session?.user) {
         const user = await buildUser(session.user);
         setState({ user, isLoading: false });
       } else if (event === 'SIGNED_OUT') {

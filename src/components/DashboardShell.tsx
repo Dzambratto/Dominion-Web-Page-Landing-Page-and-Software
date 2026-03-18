@@ -24,10 +24,10 @@ const APP_URL = (import.meta as { env: Record<string, string> }).env.VITE_APP_UR
 
 export type ViewId = 'inbox' | 'invoices' | 'contracts' | 'insurance' | 'orders' | 'payments' | 'intelligence' | 'settings';
 
-export function DashboardShell() {
+export function DashboardShell({ initialView }: { initialView?: ViewId }) {
   const { state } = useAppStore();
   const { user } = useAuth();
-  const [activeView, setActiveView] = useState<ViewId>('inbox');
+  const [activeView, setActiveView] = useState<ViewId>(initialView || 'inbox');
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
