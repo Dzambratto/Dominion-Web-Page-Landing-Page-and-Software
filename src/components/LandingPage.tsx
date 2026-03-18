@@ -247,15 +247,15 @@ function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () =
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 mb-8">
           <Sparkles size={13} className="text-blue-400" />
-          <span className="text-blue-300 text-xs font-semibold tracking-wide uppercase">AI-First Financial Operations</span>
+          <span className="text-blue-300 text-xs font-semibold tracking-wide uppercase">AI Back Office</span>
         </div>
 
         {/* Headline */}
         <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
-          Your Business Finances,{' '}
+          The AI Back Office{' '}
           <span className="relative">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-              Fully Automated
+              for Your Business
             </span>
             <svg className="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 300 6" fill="none">
               <path d="M0 3 Q75 0 150 3 Q225 6 300 3" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
@@ -265,7 +265,7 @@ function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () =
 
         {/* Subheadline */}
         <p className="text-slate-400 text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed mb-10">
-          Dominion replaces your financial controller with AI — reading every invoice, contract, and insurance policy that lands in your inbox, catching overcharges before you pay them, and keeping your business protected around the clock.
+          Dominion reads invoices, understands vendor contracts, monitors operational patterns, and flags problems before they cost you money — while you remain fully in control.
         </p>
 
         {/* CTA buttons */}
@@ -274,7 +274,7 @@ function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () =
             onClick={onEnterApp}
             className="group flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white font-bold text-base px-8 py-4 rounded-xl transition-all hover:shadow-2xl hover:shadow-blue-500/30 active:scale-95"
           >
-            Start Free Beta
+            Join the Beta
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
           <button
@@ -300,12 +300,12 @@ function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () =
             <Lock size={14} className="text-slate-400" />
             <span>Bank-grade encryption</span>
           </div>
-          <div className="w-1 h-1 rounded-full bg-slate-700" />
+          <div className="w-1 h-1 rounded-full bg-slate-700 hidden sm:block" />
           <div className="flex items-center gap-2">
             <CheckCircle size={14} className="text-slate-400" />
             <span>No credit card required</span>
           </div>
-          <div className="w-1 h-1 rounded-full bg-slate-700" />
+          <div className="w-1 h-1 rounded-full bg-slate-700 hidden sm:block" />
           <div className="flex items-center gap-2">
             <Zap size={14} className="text-slate-400" />
             <span>Live in under 5 minutes</span>
@@ -326,6 +326,151 @@ function Hero({ onEnterApp, onSignIn }: { onEnterApp: () => void; onSignIn: () =
         .animate-float-medium { animation: float-medium 4.5s ease-in-out infinite 1s; }
         .animate-float-fast { animation: float-fast 5s ease-in-out infinite 2s; }
       `}</style>
+    </section>
+  );
+}
+
+// ─── AI Alerts Section ───────────────────────────────────────────────────────
+
+function AIAlertsSection() {
+  const alerts = [
+    {
+      type: 'warning',
+      color: 'amber',
+      title: 'Vendor price increase detected',
+      vendor: 'SnowPro Services',
+      detail: 'Previous invoice: $1,240  ·  Latest invoice: $1,520',
+      badge: '+22% increase',
+    },
+    {
+      type: 'error',
+      color: 'red',
+      title: 'Invoice exceeds contract pricing',
+      vendor: 'SnowPro Services',
+      detail: 'Contract: $200/inch × 6 inches = $1,200 expected',
+      badge: '$2,200 billed',
+    },
+    {
+      type: 'warning',
+      color: 'amber',
+      title: 'Possible duplicate invoice detected',
+      vendor: 'ABC Landscaping',
+      detail: 'Invoice INV-4421 matches one paid on March 2',
+      badge: 'Review required',
+    },
+    {
+      type: 'info',
+      color: 'blue',
+      title: 'Repeated repair detected',
+      vendor: '123 Main Street',
+      detail: 'Second plumbing service call within 18 days',
+      badge: 'Pattern flagged',
+    },
+    {
+      type: 'error',
+      color: 'red',
+      title: 'Unusual vendor spend spike',
+      vendor: 'HVAC Services',
+      detail: 'Average monthly spend: $1,200  ·  This month: $3,850',
+      badge: '+221% spike',
+    },
+    {
+      type: 'warning',
+      color: 'amber',
+      title: 'Insurance renewal approaching',
+      vendor: 'General Liability Policy',
+      detail: 'Renewal date: July 1  ·  Premium increased 18% last year',
+      badge: '46 days remaining',
+    },
+  ];
+
+  const colorMap: Record<string, { bg: string; border: string; text: string; badge: string; dot: string }> = {
+    amber: {
+      bg: 'bg-amber-500/8',
+      border: 'border-amber-500/20',
+      text: 'text-amber-400',
+      badge: 'bg-amber-500/15 text-amber-300',
+      dot: 'bg-amber-400',
+    },
+    red: {
+      bg: 'bg-red-500/8',
+      border: 'border-red-500/20',
+      text: 'text-red-400',
+      badge: 'bg-red-500/15 text-red-300',
+      dot: 'bg-red-400',
+    },
+    blue: {
+      bg: 'bg-blue-500/8',
+      border: 'border-blue-500/20',
+      text: 'text-blue-400',
+      badge: 'bg-blue-500/15 text-blue-300',
+      dot: 'bg-blue-400',
+    },
+  };
+
+  return (
+    <section className="py-24 bg-[#060D1A]">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Section header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-6">
+            <AlertTriangle size={13} className="text-amber-400" />
+            <span className="text-slate-300 text-xs font-semibold tracking-wide uppercase">Dominion Catches What Businesses Miss</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+            What Dominion Detected{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">This Week</span>
+          </h2>
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            These are the kinds of problems Dominion catches automatically — before they cost you money.
+          </p>
+        </div>
+
+        {/* Alert cards grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {alerts.map((alert, i) => {
+            const c = colorMap[alert.color];
+            return (
+              <div
+                key={i}
+                className={`relative ${c.bg} border ${c.border} rounded-2xl p-5 flex flex-col gap-3 hover:border-opacity-40 transition-all`}
+              >
+                {/* Top row */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-block w-2 h-2 rounded-full ${c.dot} flex-shrink-0 mt-0.5`} />
+                    <span className={`text-sm font-semibold ${c.text}`}>{alert.title}</span>
+                  </div>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${c.badge}`}>
+                    {alert.badge}
+                  </span>
+                </div>
+
+                {/* Vendor */}
+                <div className="text-white font-semibold text-base">{alert.vendor}</div>
+
+                {/* Detail */}
+                <div className="text-slate-400 text-sm leading-relaxed">{alert.detail}</div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2 mt-1">
+                  <button className="flex-1 text-xs font-semibold text-white bg-white/8 hover:bg-white/12 border border-white/10 rounded-lg py-2 transition-colors">
+                    Review
+                  </button>
+                  <button className="flex-1 text-xs font-semibold text-slate-400 hover:text-slate-300 bg-transparent border border-white/8 hover:border-white/15 rounded-lg py-2 transition-colors">
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bottom note */}
+        <p className="text-center text-slate-500 text-sm mt-10">
+          Dominion builds a memory of your vendors, contracts, and service history — detecting unusual activity, repeated issues, and pricing changes automatically.
+        </p>
+      </div>
     </section>
   );
 }
@@ -644,20 +789,23 @@ function AboutSection() {
           <div>
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-8">
               <Building2 size={13} className="text-blue-400" />
-              <span className="text-slate-300 text-xs font-semibold tracking-wide uppercase">Our Mission</span>
+              <span className="text-slate-300 text-xs font-semibold tracking-wide uppercase">About Dominion</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight">
-              Built for businesses that can't afford to miss anything
+              The financial oversight every business should have
             </h2>
             <div className="space-y-5 text-slate-400 text-base leading-relaxed">
               <p>
-                Most businesses operate without dedicated financial oversight. Invoices get paid without verification. Contracts get signed and forgotten. Insurance lapses quietly. Vendors test the limits — because no one is watching closely enough.
+                A seasoned financial controller typically costs between $70,000 and $100,000 per year. For most small and mid-sized businesses, that level of oversight simply isn’t accessible — yet the work they do is critical.
+              </p>
+              <p className="space-y-1">
+                Invoices slip through unnoticed. Contracts drift out of compliance. Insurance renewals go unreviewed. Vendors quietly raise prices.
               </p>
               <p>
-                Dominion changes that. Our AI monitors every financial document that touches your business — reading, verifying, and flagging issues before they cost you. Not as a replacement for your judgment, but as the layer of scrutiny that makes your decisions more confident.
+                Dominion was built to close that gap. We believe every business deserves the same financial vigilance that large enterprises rely on. Dominion acts as an AI back office — reading invoices, understanding contracts, tracking vendor behavior, and detecting problems before they cost you money.
               </p>
               <p>
-                When something reaches your desk, it genuinely needs your attention. Everything else is handled.
+                Our goal isn’t to replace your judgment. It’s to eliminate the tedious, error-prone work that hides real problems. Dominion surfaces the issues that actually require attention — so when something reaches your desk, it genuinely matters.
               </p>
             </div>
           </div>
@@ -668,22 +816,22 @@ function AboutSection() {
               {
                 icon: <Shield size={20} />,
                 title: 'Protection First',
-                desc: 'Every feature is designed to protect your business from overpayment, coverage gaps, and contract violations. We measure success by the money we save you, not the features we ship.',
+                desc: 'Every feature is designed to protect your business from overpayment, coverage gaps, and contract violations. We measure success by the money we help you keep — not the number of features we ship.',
               },
               {
                 icon: <Eye size={20} />,
                 title: 'Radical Transparency',
-                desc: 'You should always know why Dominion flagged something. Every AI decision comes with a confidence score, source text, and plain-English explanation. No black boxes.',
+                desc: 'You should always understand why Dominion flagged something. Every alert includes a confidence score, the relevant source text, and a plain-English explanation. No black boxes.',
               },
               {
                 icon: <Users size={20} />,
                 title: 'Human in the Loop',
-                desc: 'AI handles the volume. Humans handle the judgment. Dominion never takes an action without your approval — it prepares, verifies, and presents. You decide.',
+                desc: 'AI handles the volume. Humans handle the judgment. Dominion never executes financial actions automatically — it prepares, verifies, and presents. You stay in control.',
               },
               {
                 icon: <Globe size={20} />,
                 title: 'Built for the Real World',
-                desc: 'We built Dominion by studying how actual SMBs operate — messy inboxes, inconsistent vendor formats, and contracts that get signed and forgotten. It works with reality, not against it.',
+                desc: 'Most businesses operate in messy environments: inconsistent invoices, forgotten contracts, and overloaded inboxes. Dominion was designed for that reality — not a perfect spreadsheet.',
               },
             ].map((item) => (
               <div key={item.title} className="flex gap-5 bg-white/3 border border-white/8 rounded-2xl p-6">
@@ -706,27 +854,9 @@ function AboutSection() {
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
 function PricingSection({ onEnterApp }: { onEnterApp: () => void }) {
-  const startCheckout = async (planId: string) => {
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        onEnterApp();
-      }
-    } catch {
-      onEnterApp();
-    }
-  };
   const plans = [
     {
       name: 'Starter',
-      planId: 'starter',
       price: 149,
       description: 'For small businesses processing up to 50 invoices per month.',
       features: [
@@ -742,7 +872,6 @@ function PricingSection({ onEnterApp }: { onEnterApp: () => void }) {
     },
     {
       name: 'Operator',
-      planId: 'operator',
       price: 349,
       description: 'For growing businesses that need full AP automation and insurance tracking.',
       features: [
@@ -760,7 +889,6 @@ function PricingSection({ onEnterApp }: { onEnterApp: () => void }) {
     },
     {
       name: 'Controller',
-      planId: 'controller',
       price: 749,
       description: 'For established businesses that need the full platform with order automation.',
       features: [
@@ -827,7 +955,7 @@ function PricingSection({ onEnterApp }: { onEnterApp: () => void }) {
               </div>
 
               <button
-                onClick={() => startCheckout((plan as any).planId)}
+                onClick={onEnterApp}
                 className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
                   plan.highlight
                     ? 'bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/25'
@@ -909,6 +1037,7 @@ export function LandingPage({ onEnterApp, onSignIn }: { onEnterApp: () => void; 
     <div className="min-h-screen bg-[#080F1E]">
       <Nav onEnterApp={onEnterApp} onSignIn={handleSignIn} />
       <Hero onEnterApp={onEnterApp} onSignIn={handleSignIn} />
+      <AIAlertsSection />
       <StatsBar />
       <PlatformSection />
       <FeaturesSection />
