@@ -37,7 +37,7 @@ export function InvoiceDetailModal({ invoice, contract, onClose }: Props) {
             <div className="flex items-center gap-3 text-sm text-[#64748B]">
               <span className="font-mono">{invoice.invoiceNumber}</span>
               <span>·</span>
-              <span>Received {formatDate(invoice.receivedDate)}</span>
+              <span>Received {formatDate(invoice.receivedDate ?? "")}</span>
               <span>·</span>
               <span>via {invoice.source}</span>
             </div>
@@ -51,7 +51,7 @@ export function InvoiceDetailModal({ invoice, contract, onClose }: Props) {
           <div className="grid grid-cols-4 gap-4">
             <MetricCard label="Invoice Amount" value={invoice.amount > 0 ? formatCurrency(invoice.amount) : '—'} highlight />
             <MetricCard label="Due Date" value={formatDate(invoice.dueDate)} />
-            <MetricCard label="AI Confidence" value={<ConfidenceBadge score={invoice.extractionConfidence} />} />
+            <MetricCard label="AI Confidence" value={<ConfidenceBadge score={invoice.extractionConfidence ?? 0} />} />
             <MetricCard label="Anomalies" value={invoice.anomalies.length > 0 ? `${invoice.anomalies.length} detected` : 'None'} valueColor={invoice.anomalies.length > 0 ? '#EF4444' : '#10B981'} />
           </div>
 

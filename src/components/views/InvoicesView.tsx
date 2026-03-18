@@ -144,7 +144,7 @@ function InvoiceRow({ invoice, onClick }: { invoice: Invoice; onClick: () => voi
         <StatusBadge status={invoice.status} />
       </td>
       <td className="px-4 py-3">
-        <ConfidenceBadge score={invoice.extractionConfidence} />
+        <ConfidenceBadge score={invoice.extractionConfidence ?? 0} />
       </td>
       <td className="px-4 py-3">
         {invoice.anomalies.length > 0 ? (

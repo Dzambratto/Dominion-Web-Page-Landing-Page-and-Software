@@ -205,7 +205,7 @@ function TopBar({
         </button>
         {/* AI Scan button */}
         <button
-          onClick={triggerScan}
+          onClick={() => triggerScan()}
           disabled={isScanning}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#EFF6FF] text-[#3B82F6] hover:bg-[#DBEAFE] transition-colors disabled:opacity-60"
         >

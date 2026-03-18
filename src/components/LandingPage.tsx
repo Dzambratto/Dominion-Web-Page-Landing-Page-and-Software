@@ -706,6 +706,23 @@ function AboutSection() {
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 
 function PricingSection({ onEnterApp }: { onEnterApp: () => void }) {
+  const startCheckout = async (planId: string) => {
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        onEnterApp();
+      }
+    } catch {
+      onEnterApp();
+    }
+  };
   const plans = [
     {
       name: 'Starter',

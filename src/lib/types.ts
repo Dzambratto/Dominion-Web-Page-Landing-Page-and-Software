@@ -31,14 +31,19 @@ export interface Anomaly {
 export interface Invoice {
   id: string;
   vendorName: string;
-  vendorEmail: string;
+  vendorEmail?: string;
   invoiceNumber: string;
   amount: number;
+  currency?: string;
   dueDate: string;
-  receivedDate: string;
+  invoiceDate?: string;
+  receivedDate?: string;
   status: InvoiceStatus;
+  category?: string;
+  description?: string;
   source: 'gmail' | 'outlook' | 'manual';
-  extractionConfidence: number;
+  sourceEmailId?: string;
+  extractionConfidence?: number;
   lineItems: LineItem[];
   anomalies: Anomaly[];
   contractId?: string;
@@ -115,6 +120,7 @@ export interface InsurancePolicy {
   yearOverYearPremiums: { year: number; premium: number }[];
   alternativeQuotes?: InsuranceQuote[];
   switchPaperworkReady?: boolean;
+  notes?: string;
 }
 
 export interface Payment {

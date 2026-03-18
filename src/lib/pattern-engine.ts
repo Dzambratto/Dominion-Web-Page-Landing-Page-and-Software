@@ -65,7 +65,7 @@ export function invoiceToEvent(invoice: Invoice, propertyOverride?: string): Ser
     propertyId: normalizeKey(property),
     category,
     issueDescription: description.slice(0, 120),
-    date: invoice.receivedDate,
+    date: invoice.receivedDate ?? "",
     amount: invoice.amount,
     contractId: invoice.contractId,
     contractedAmount: invoice.previousAmount,

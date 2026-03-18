@@ -52,7 +52,7 @@ export function InboxView({ onViewInvoice, onViewPolicy, onViewContract, onUploa
             <span className="text-white/40 text-xs">{s.aiScansToday} scans today</span>
           </div>
           <button
-            onClick={triggerScan}
+            onClick={() => triggerScan()}
             disabled={state.isScanning}
             className="text-xs text-[#3B82F6] hover:text-blue-400 font-medium disabled:opacity-50"
           >

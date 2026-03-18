@@ -136,7 +136,7 @@ export function ContractDetailModal({ contract, invoices, onClose, onViewInvoice
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-xs text-[#64748B]">{inv.invoiceNumber}</span>
-                      <span className="text-sm text-[#0F172A]">{formatDate(inv.receivedDate)}</span>
+                      <span className="text-sm text-[#0F172A]">{formatDate(inv.receivedDate ?? "")}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <StatusBadge status={inv.status} />
