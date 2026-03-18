@@ -16,6 +16,7 @@ import { OrderDetailModal } from './modals/OrderDetailModal';
 import IntelligenceView from './views/IntelligenceView';
 import { UploadModal } from './UploadModal';
 import type { UploadDocType } from './UploadModal';
+import { EmptyInboxState } from './EmptyInboxState';
 
 // FIX (Claude audit): Removed isLocalDev bypass. OAuth now works in all environments.
 // For local dev, ensure VITE_APP_URL=http://localhost:5173 and add localhost redirect URI to Google/Microsoft consoles.
@@ -69,18 +70,29 @@ export function DashboardShell() {
           onNavigateSettings={() => setActiveView('settings')}
         />
         {/* View content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto flex flex-col">
           {activeView === 'inbox' && (
-            <InboxView
-              onViewInvoice={setSelectedInvoiceId}
-              onViewPolicy={setSelectedPolicyId}
-              onViewContract={setSelectedContractId}
-              onUpload={() => setShowUpload(true)}
-              onConnectEmail={() => {
-                const userId = user?.id ?? '';
-                window.location.href = `${APP_URL}/api/auth/google?userId=${encodeURIComponent(userId)}`;
-              }}
-            />
+            !user?.emailConnections?.length
+              ? <EmptyInboxState
+                  onConnectGmail={() => {
+                    const userId = user?.id ?? '';
+                    window.location.href = `${APP_URL}/api/auth/google?userId=${encodeURIComponent(userId)}`;
+                  }}
+                  onConnectOutlook={() => {
+                    const userId = user?.id ?? '';
+                    window.location.href = `${APP_URL}/api/auth/microsoft?userId=${encodeURIComponent(userId)}`;
+                  }}
+                />
+              : <InboxView
+                  onViewInvoice={setSelectedInvoiceId}
+                  onViewPolicy={setSelectedPolicyId}
+                  onViewContract={setSelectedContractId}
+                  onUpload={() => setShowUpload(true)}
+                  onConnectEmail={() => {
+                    const userId = user?.id ?? '';
+                    window.location.href = `${APP_URL}/api/auth/google?userId=${encodeURIComponent(userId)}`;
+                  }}
+                />
           )}
           {activeView === 'invoices' && (
             <InvoicesView
