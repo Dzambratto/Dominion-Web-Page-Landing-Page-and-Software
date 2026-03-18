@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from '@/lib/auth';
 import { LandingPage } from '@/components/LandingPage';
 import { DashboardShell } from '@/components/DashboardShell';
 import { AuthScreen } from '@/components/AuthScreen';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   google_denied: 'Google sign-in was cancelled.',
@@ -37,7 +37,11 @@ function AppInner() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [oauthNotice, setOauthNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Handle OAuth callbacks — Google/Microsoft redirect back with query params
+  // Track pending OAuth connection — we may need to apply it once user is loaded
+  const pendingOAuthRef = useRef<{ provider: 'gmail' | 'outlook'; email: string; label: string } | null>(null);
+  const oauthProcessedRef = useRef(false);
+
+  // Parse OAuth params on mount — store them for processing once auth state is ready
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const oauthSuccess = params.get('oauth_success');
@@ -46,23 +50,10 @@ function AppInner() {
 
     if (oauthSuccess && email) {
       const provider = oauthSuccess === 'google' ? 'gmail' : 'outlook';
-      const providerLabel = oauthSuccess === 'google' ? 'Gmail' : 'Outlook';
-
-      addEmailConnection({
-        provider,
-        email,
-        connectedAt: new Date().toISOString(),
-        status: 'active',
-      });
-
-      setOauthNotice({
-        type: 'success',
-        message: `✓ ${providerLabel} connected — ${email}\nWe're scanning your inbox for financial documents now.`,
-      });
-
-      // Clean up URL params without reloading
+      const label = oauthSuccess === 'google' ? 'Gmail' : 'Outlook';
+      pendingOAuthRef.current = { provider, email, label };
+      // Clean up URL params immediately so they don't persist on refresh
       window.history.replaceState({}, '', window.location.pathname);
-      setTimeout(() => setOauthNotice(null), 7000);
     } else if (oauthError) {
       setOauthNotice({
         type: 'error',
@@ -71,10 +62,44 @@ function AppInner() {
       window.history.replaceState({}, '', window.location.pathname);
       setTimeout(() => setOauthNotice(null), 6000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount only
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // While restoring session from localStorage, show nothing (avoids flash)
+  // Apply pending OAuth connection once user is available and loading is done
+  useEffect(() => {
+    if (isLoading) return;
+    if (!pendingOAuthRef.current) return;
+    if (oauthProcessedRef.current) return;
+
+    const { provider, email, label } = pendingOAuthRef.current;
+    oauthProcessedRef.current = true;
+    pendingOAuthRef.current = null;
+
+    if (user) {
+      // User is logged in — save the connection
+      addEmailConnection({
+        provider,
+        email,
+        connectedAt: new Date().toISOString(),
+        status: 'active',
+      });
+      setOauthNotice({
+        type: 'success',
+        message: `✓ ${label} connected — ${email}\nWe're scanning your inbox for financial documents now.`,
+      });
+      setTimeout(() => setOauthNotice(null), 7000);
+    } else {
+      // User is not logged in — show sign-in screen with a notice
+      setOauthNotice({
+        type: 'success',
+        message: `✓ ${label} (${email}) authorized — please sign in to complete the connection.`,
+      });
+      setAuthMode('signin');
+      setMode('auth');
+      setTimeout(() => setOauthNotice(null), 10000);
+    }
+  }, [isLoading, user, addEmailConnection]);
+
+  // While restoring session from Supabase, show loading screen
   if (isLoading) {
     return (
       <div style={{
@@ -104,11 +129,14 @@ function AppInner() {
   // Auth screen (sign in / sign up)
   if (mode === 'auth') {
     return (
-      <AuthScreen
-        initialMode={authMode}
-        onSuccess={() => { /* auth state update triggers re-render automatically */ }}
-        onBack={() => setMode('landing')}
-      />
+      <>
+        {oauthNotice && <OAuthNotice notice={oauthNotice} />}
+        <AuthScreen
+          initialMode={authMode}
+          onSuccess={() => { /* auth state update triggers re-render automatically */ }}
+          onBack={() => setMode('landing')}
+        />
+      </>
     );
   }
 

@@ -52,24 +52,41 @@ function hashPassword(password: string): string {
 }
 
 async function fetchProfile(userId: string): Promise<{ name: string; company: string } | null> {
-  const { data } = await supabase.from('profiles').select('name, company').eq('id', userId).single();
-  return data;
+  try {
+    const { data } = await supabase.from('profiles').select('name, company').eq('id', userId).single();
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchEmailConnections(userId: string): Promise<EmailConnection[]> {
-  const { data } = await supabase.from('email_connections').select('provider, email, connected_at, status').eq('user_id', userId);
-  if (!data) return [];
-  return data.map((row) => ({
-    provider: row.provider as 'gmail' | 'outlook',
-    email: row.email,
-    connectedAt: row.connected_at,
-    status: row.status as 'active' | 'error',
-  }));
+  try {
+    const { data } = await supabase.from('email_connections').select('provider, email, connected_at, status').eq('user_id', userId);
+    if (!data) return [];
+    return data.map((row) => ({
+      provider: row.provider as 'gmail' | 'outlook',
+      email: row.email,
+      connectedAt: row.connected_at,
+      status: row.status as 'active' | 'error',
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function buildUser(supabaseUser: { id: string; email?: string; created_at: string }): Promise<User> {
-  const profile = await fetchProfile(supabaseUser.id);
-  const connections = await fetchEmailConnections(supabaseUser.id);
+  // Race against a 5-second timeout so we never hang forever
+  const timeout = new Promise<{ profile: null; connections: EmailConnection[] }>((resolve) =>
+    setTimeout(() => resolve({ profile: null, connections: [] }), 5000)
+  );
+  const fetches = Promise.all([fetchProfile(supabaseUser.id), fetchEmailConnections(supabaseUser.id)])
+    .then(([profile, connections]) => ({ profile, connections }));
+
+  const result = await Promise.race([fetches, timeout]);
+  const profile = 'profile' in result ? result.profile : null;
+  const connections = result.connections;
+
   return {
     id: supabaseUser.id,
     email: supabaseUser.email || '',
@@ -84,7 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, isLoading: true });
 
   useEffect(() => {
+    // Safety net: never stay in loading state longer than 8 seconds
+    const loadingTimeout = setTimeout(() => {
+      setState(prev => prev.isLoading ? { ...prev, isLoading: false } : prev);
+    }, 8000);
+
     if (!isSupabaseConfigured) {
+      clearTimeout(loadingTimeout);
       try {
         const sessionUserId = localStorage.getItem(SESSION_KEY);
         if (sessionUserId) {
@@ -98,12 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(loadingTimeout);
       if (session?.user) {
         const user = await buildUser(session.user);
         setState({ user, isLoading: false });
       } else {
         setState({ user: null, isLoading: false });
       }
+    }).catch(() => {
+      clearTimeout(loadingTimeout);
+      setState({ user: null, isLoading: false });
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -112,10 +139,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState({ user, isLoading: false });
       } else if (event === 'SIGNED_OUT') {
         setState({ user: null, isLoading: false });
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        // Don't rebuild user on token refresh — just ensure loading is cleared
+        setState(prev => prev.isLoading ? { ...prev, isLoading: false } : prev);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, name: string, company: string): Promise<{ error?: string }> => {
